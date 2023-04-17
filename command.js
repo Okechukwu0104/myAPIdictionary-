@@ -1,7 +1,7 @@
 const http = require('http');
 
 // Replace YOUR_API_KEY with your actual API key from Merriam-Webster
-const API_KEY = 'YOUR_API_KEY';
+const API_KEY = '4ee6d020-710d-4c37-9be9-60c7e4abd6cc';
 
 // Get command-line arguments
 const word = process.argv[2];
