@@ -1,33 +1,45 @@
 const http = require('http');
+const readline = require('readline');
 
-// Replace YOUR_API_KEY with your actual API key from Merriam-Webster
-const API_KEY = '4ee6d020-710d-4c37-9be9-60c7e4abd6cc';
+// Replace YOUR_API_KEY with your actual API key
+const API_KEY = 'YOUR_API_KEY';
+const API_HOST = 'www.dictionaryapi.com';
+const API_PATH = '/api/v3/references/collegiate/json/';
 
-// Get command-line arguments
-const word = process.argv[2];
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
 
-// Build URL for API request
-const url = `https://dictionaryapi.com/api/v3/references/thesaurus/json/test?key=4ee6d020-710d-4c37-9be9-60c7e4abd6cc`;
+function fetchWordDefinition(word) {
+  const url = `http://${API_HOST}${API_PATH}${encodeURIComponent(word)}?key=${API_KEY}`;
 
-// Make API request
-http.get(url, (res) => {
-  let data = '';
-  
-  res.on('data', (chunk) => {
-    data += chunk;
+  http.get(url, (res) => {
+    let body = '';
+    res.on('data', (chunk) => {
+      body += chunk;
+    });
+    res.on('end', () => {
+      try {
+        const data = JSON.parse(body);
+        if (Array.isArray(data) && data.length > 0 && data[0].shortdef) {
+          console.log(`\nDefinitions for ${word}:`);
+          data[0].shortdef.forEach((definition, i) => {
+            console.log(`${i + 1}. ${definition}`);
+          });
+        } else {
+          console.log(`No definitions found for ${word}`);
+        }
+      } catch (err) {
+        console.error(`Error parsing JSON response: ${err}`);
+      }
+    });
+  }).on('error', (err) => {
+    console.error(`Error fetching word definition: ${err}`);
   });
-  
-  res.on('end', () => {
-    // Parse XML response into JavaScript object
-    const parser = new DOMParser();
-    const xml = parser.parseFromString(data, 'text/xml');
-    
-    // Get first definition from response
-    const definition = xml.querySelector('entry def').textContent;
-    
-    // Display definition to user
-    console.log(`${word}: ${definition}`);
-  });
-}).on('error', (err) => {
-  console.error(err);
+}
+
+rl.question('Enter a word: ', (word) => {
+  fetchWordDefinition(word);
+  rl.close();
 });
